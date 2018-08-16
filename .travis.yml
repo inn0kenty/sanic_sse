@@ -2,19 +2,12 @@ language: python
 python:
   - "3.6"
 
+if: branch = master AND tag IS present
+
 install:
   - pip install flit
   - flit install -s --deps all
 
 script:
   - pytest
-
-deploy:
-  provider: script
-  script: flit release
-  on:
-    tags: true
-
-branches:
-  except:
-    - dev
+  - flit release
