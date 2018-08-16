@@ -1,0 +1,32 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "sanic_sse"
+author = "Innokenty Lebedev"
+author-email = "innlebedev@gmail.com"
+home-page = "https://github.com/inn0kenty/sanic_sse"
+requires-python = ">=3.5"
+requires = [
+    "sanic>=0.7.0,<1",
+]
+dev-requires = [
+    "pylint",
+    "mypy",
+    "black",
+    "pytest",
+    "pytest-cov",
+    "pytest-random-order",
+    "pytest-asyncio",
+    "bumpversion",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.5",
+	"Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Topic :: Internet :: WWW/HTTP",
+    "Framework :: AsyncIO",
+]

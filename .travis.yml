@@ -1,0 +1,21 @@
+language: python
+python:
+  - "3.6"
+
+install:
+  - pip install flit
+  - flit install -s --deps all
+
+script:
+  - pytest
+
+deploy:
+  provider: script
+  script: flit release
+  on:
+    tags: true
+    branch: master
+
+branches:
+  only:
+    - master
