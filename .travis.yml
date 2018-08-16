@@ -16,5 +16,5 @@ deploy:
     tags: true
 
 branches:
-  only:
-    - master
+  except:
+    - dev
