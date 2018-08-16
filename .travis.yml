@@ -10,4 +10,4 @@ install:
 
 script:
   - pytest
-  - flit release
+  - flit publish
