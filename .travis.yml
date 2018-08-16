@@ -14,7 +14,6 @@ deploy:
   script: flit release
   on:
     tags: true
-    branch: master
 
 branches:
   only:
