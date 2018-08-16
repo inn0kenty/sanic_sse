@@ -6,3 +6,4 @@ htmlcov
 .mypy_cache
 client.py
 server.py
+dist
