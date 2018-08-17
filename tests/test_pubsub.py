@@ -53,6 +53,24 @@ async def test_publish_subscribing():
 
 
 @pytest.mark.asyncio
+async def test_publish_nowait():
+    pubsub = PubSub()
+
+    data = "some_data"
+    channel_id1 = pubsub.register()
+    channel_id2 = pubsub.register()
+
+    pubsub.publish_nowait(data)
+
+    async def handel(channel_id):
+        data1 = await pubsub.get(channel_id)
+        assert data1 == data
+        pubsub.task_done(channel_id)
+
+    await asyncio.gather(*[handel(_) for _ in [channel_id1, channel_id2]])
+
+
+@pytest.mark.asyncio
 async def test_stop():
     pubsub = PubSub()
 

@@ -97,6 +97,32 @@ async def test_send():
 
 
 @pytest.mark.asyncio
+async def test_send_nowait():
+    sanic_app = Sanic()
+    sse = Sse(sanic_app)
+
+    channel_id = sse._pubsub.register()
+
+    data = "test data"
+    event_id = "1"
+    event = "2"
+    retry = 3
+
+    sanic_app.sse_send_nowait(  # pylint: disable=no-member
+        data, event_id=event_id, event=event, retry=retry
+    )
+
+    await asyncio.sleep(0)
+
+    result = await sse._pubsub.get(channel_id)
+
+    assert (
+        result
+        == f"id: {event_id}\r\nevent: {event}\r\ndata: {data}\r\nretry: {retry}\r\n\r\n".encode()
+    )
+
+
+@pytest.mark.asyncio
 async def test_before_request_callback():
     sanic_app = Sanic()
 
