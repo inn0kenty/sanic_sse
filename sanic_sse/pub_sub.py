@@ -55,8 +55,12 @@ class PubSub:
 
         :param str channel_id: Identifier of subscriber
         """
+        try:
+            del self._channels[channel_id]
+        except KeyError:
+            return False
 
-        del self._channels[channel_id]
+        return True
 
     async def get(self, channel_id: str):
         """

@@ -174,13 +174,16 @@ class Sse:
                 abort(HTTPStatus.BAD_REQUEST, str(exc))
 
             async def streaming_fn(response):
-                while True:
-                    try:
-                        data = await self._pubsub.get(channel_id)
-                    except ValueError:
-                        break
-                    response.write(data)
-                    self._pubsub.task_done(channel_id)
+                try:
+                    while True:
+                        try:
+                            data = await self._pubsub.get(channel_id)
+                        except ValueError:
+                            break
+                        response.write(data)
+                        self._pubsub.task_done(channel_id)
+                finally:
+                    self._pubsub.delete(channel_id)
 
             return stream(
                 streaming_fn, headers=self._HEADERS, content_type="text/event-stream"
