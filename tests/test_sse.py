@@ -177,3 +177,30 @@ async def test_register_two_subscribers():
 
     with pytest.raises(InvalidUsage):
         await sanic_app.router.routes_all["/sse"].handler(Request())
+
+
+@pytest.mark.asyncio
+async def test_transport_closed():
+    sanic_app = Sanic()
+
+    sse = Sse(sanic_app)
+
+    class Request:  # pylint: disable=too-few-public-methods
+        args = {"channel_id": "1"}
+
+    class Response:  # pylint: disable=too-few-public-methods
+        @staticmethod
+        def write(data):
+            raise Exception
+
+    str_response = await sanic_app.router.routes_all["/sse"].handler(Request())
+
+    fut = asyncio.ensure_future(str_response.streaming_fn(Response()))
+
+    await sanic_app.sse_send("test")  # pylint: disable=no-member
+
+    fut.cancel()
+    with contextlib.suppress(Exception):
+        await fut
+
+    assert sse._pubsub.size() == 0
