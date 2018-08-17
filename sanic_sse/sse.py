@@ -93,7 +93,7 @@ class Sse:
         event: str = None,
         retry: int = None,
     ):
-        """Send data using EventSource protocol
+        """Send data using EventSource protocol. This call is blocking
         :param str data: The data field for the message.
         :param str event_id: The event ID to set the EventSource object's last
             event ID value to.
@@ -110,6 +110,32 @@ class Sse:
         data = self._prepare(data, event_id, event, retry)
 
         await self._pubsub.publish(data, channel_id)
+
+    def send_nowait(  # pylint: disable=too-many-arguments
+        self,
+        data: str,
+        channel_id: str = None,
+        event_id: str = None,
+        event: str = None,
+        retry: int = None,
+    ):
+        """Send data using EventSource protocol. This call is not blocking.
+        :param str data: The data field for the message.
+        :param str event_id: The event ID to set the EventSource object's last
+            event ID value to.
+        :param str event: The event's type. If this is specified, an event will
+            be dispatched on the browser to the listener for the specified
+            event name; the web site would use addEventListener() to listen
+            for named events. The default event type is "message".
+        :param int retry: The reconnection time to use when attempting to send
+            the event. [What code handles this?] This must be an integer,
+            specifying the reconnection time in milliseconds. If a non-integer
+            value is specified, the field is ignored.
+        """
+
+        data = self._prepare(data, event_id, event, retry)
+
+        self._pubsub.publish_nowait(data, channel_id)
 
     def set_before_request_callback(self, func):
         """
@@ -161,6 +187,7 @@ class Sse:
             await self._pubsub.close()
 
         app.sse_send = self.send
+        app.sse_send_nowait = self.send_nowait
 
         @app.route(self._url, methods=["GET"])
         async def _(request):

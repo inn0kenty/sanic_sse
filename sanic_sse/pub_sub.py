@@ -20,11 +20,27 @@ class PubSub:
     def __init__(self):
         self._channels: Dict[str, asyncio.Queue] = {}
 
-    async def publish(self, data: str, channel_id: str = None):
+    def publish_nowait(self, data: str, channel_id: str = None):
         """
-        Publish data to all subscribers
+        Publish data to all subscribers or to channel with provided channel_id.
+        This call is not blocking.
 
         :param str data: The data to publush
+        :param str channel_id: If given then data will be send only to channel with that id
+        """
+
+        if channel_id is not None:
+            self._channels[channel_id].put_nowait(data)
+        else:
+            asyncio.gather(*[channel.put(data) for channel in self._channels.values()])
+
+    async def publish(self, data: str, channel_id: str = None):
+        """
+        Publish data to all subscribers or to channel with provided channel_id.
+        This call is blocking.
+
+        :param str data: The data to publush
+        :param str channel_id: If given then data will be send only to channel with that id
         """
 
         if channel_id is not None:
