@@ -207,7 +207,7 @@ class Sse:
                             data = await self._pubsub.get(channel_id)
                         except ValueError:
                             break
-                        response.write(data)
+                        await response.write(data)
                         self._pubsub.task_done(channel_id)
                 finally:
                     self._pubsub.delete(channel_id)
