@@ -15,8 +15,10 @@ $ pip install sanic_sse
 Server example:
 
 ```python
+from http import HTTPStatus
 from sanic import Sanic
 from sanic.response import json, json_dumps
+from sanic.exceptions import abort
 from sanic_sse import Sse
 
 # This function is optional callback before sse request
@@ -25,13 +27,12 @@ async def before_sse_request(request):
     if request.headers.get("Auth", "") != "some_token":
         abort(HTTPStatus.UNAUTHORIZED, "Bad auth token")
 
+
 sanic_app = Sanic()
 
 # The default sse url is /sse but you can set it via init argument url.
 Sse(
-    sanic_app,
-    url='/events',
-    before_request_func=before_sse_request
+    sanic_app, url="/events", before_request_func=before_sse_request
 )  # or you can use init_app method
 
 
@@ -49,6 +50,7 @@ async def send_event(request):
         abort(HTTPStatus.NOT_FOUND, "channel not found")
 
     return json({"status": "ok"})
+
 
 if __name__ == "__main__":
     sanic_app.run(host="0.0.0.0", port=8000)
