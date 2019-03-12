@@ -171,7 +171,7 @@ async def test_streaming_fn():
 
     class Response:  # pylint: disable=too-few-public-methods
         @staticmethod
-        def write(data):
+        async def write(data):
             nonlocal counter
             counter += 1
             assert data == b"data: test\r\n\r\n"
