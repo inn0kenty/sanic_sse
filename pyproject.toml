@@ -10,7 +10,7 @@ home-page = "https://github.com/inn0kenty/sanic_sse"
 requires-python = ">=3.5"
 description-file = "README.md"
 requires = [
-    "sanic>=0.7.0,<1",
+    "sanic>=18.12.0",
 ]
 dev-requires = [
     "pylint",
