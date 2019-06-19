@@ -18,7 +18,7 @@ class PubSub:
     """
 
     def __init__(self):
-        self._channels: Dict[str, asyncio.Queue] = {}
+        self._channels = {}
 
     def publish_nowait(self, data: str, channel_id: str = None):
         """
@@ -60,7 +60,7 @@ class PubSub:
             channel_id = str(uuid.uuid4())
 
         if channel_id in self._channels:
-            raise ValueError(f"Given channel id {channel_id} is already in use")
+            raise ValueError("Given channel id {} is already in use".format(channel_id))
         self._channels[channel_id] = asyncio.Queue()
 
         return channel_id
