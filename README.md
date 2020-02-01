@@ -1,5 +1,7 @@
 # Sanic Server-Sent Events extension
 
+![Publish](https://github.com/inn0kenty/sanic_sse/workflows/Publish/badge.svg)
+
 A Sanic extension for HTML5 [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) support, inspired by [flask-sse](https://github.com/singingwolfboy/flask-sse) and [aiohttp-sse](https://github.com/aio-libs/aiohttp-sse).
 
 ## Install
