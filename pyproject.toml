@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.5"
-sanic = "^0.7.0"
+sanic = "*"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.4.4"
