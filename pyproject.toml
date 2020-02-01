@@ -1,33 +1,35 @@
-[build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
-
-[tool.flit.metadata]
-module = "sanic_sse"
-author = "Innokenty Lebedev"
-author-email = "innlebedev@gmail.com"
-home-page = "https://github.com/inn0kenty/sanic_sse"
-requires-python = ">=3.5"
-description-file = "README.md"
-requires = [
-    "sanic>=18.12.0",
-]
-dev-requires = [
-    "pylint",
-    "mypy",
-    "black",
-    "pytest",
-    "pytest-cov",
-    "pytest-random-order",
-    "pytest-asyncio",
-    "bumpversion",
-]
+[tool.poetry]
+name = "sanic_sse"
+version = "0.2.1"
+description = "Sanic Server-Sent Events extension"
+authors = ["Innokenty Lebedev"]
+repository = "https://github.com/inn0kenty/sanic_sse"
+readme = "README.md"
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3.5",
-	"Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
     "Topic :: Internet :: WWW/HTTP",
     "Framework :: AsyncIO",
 ]
+
+[tool.poetry.dependencies]
+python = "^3.5"
+sanic = "^0.7.0"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.4.4"
+mypy = "^0.761"
+pytest = "^5.3.5"
+pytest-cov = "^2.8.1"
+pytest-random-order = "^1.0.4"
+pytest-asyncio = "^0.10.0"
+bumpversion = "^0.5.3"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
