@@ -147,7 +147,7 @@ class Sse:
             raise TypeError("{} should be callable".format(func))
         if not inspect.iscoroutinefunction(func):
             raise TypeError("{} should be coroutine function".format(func))
-        if len(inspect.signature().parameters) != 1:
+        if len(inspect.signature(func).parameters) != 1:
             raise ValueError("{} should get only one parameter - request".format(func))
 
         self._before_request = func
