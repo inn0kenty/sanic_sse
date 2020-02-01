@@ -43,7 +43,7 @@ def test_prepate():
 
     assert (
         result
-        == f"id: {event_id}\r\nevent: {event}\r\ndata: {data}\r\nretry: {retry}\r\n\r\n".encode()
+        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(event_id, event, data, retry).encode()
     )
 
     with pytest.raises(TypeError):
@@ -92,7 +92,7 @@ async def test_send():
 
     assert (
         result
-        == f"id: {event_id}\r\nevent: {event}\r\ndata: {data}\r\nretry: {retry}\r\n\r\n".encode()
+        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(event_id, event, data, retry).encode()
     )
 
 
@@ -118,7 +118,7 @@ async def test_send_nowait():
 
     assert (
         result
-        == f"id: {event_id}\r\nevent: {event}\r\ndata: {data}\r\nretry: {retry}\r\n\r\n".encode()
+        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(event_id, event, data, retry).encode()
     )
 
 

@@ -64,21 +64,21 @@ class Sse:
     def _prepare(data, event_id=None, event=None, retry=None):
         buffer = io.StringIO()
         if event_id is not None:
-            buffer.write(Sse._LINE_SEP_EXPR.sub("", f"id: {event_id}"))
+            buffer.write(Sse._LINE_SEP_EXPR.sub("", "id: {}".format(event_id)))
             buffer.write(Sse._DEFAULT_SEPARATOR)
 
         if event is not None:
-            buffer.write(Sse._LINE_SEP_EXPR.sub("", f"event: {event}"))
+            buffer.write(Sse._LINE_SEP_EXPR.sub("", "event: {}".format(event)))
             buffer.write(Sse._DEFAULT_SEPARATOR)
 
         for chunk in Sse._LINE_SEP_EXPR.split(data):
-            buffer.write(f"data: {chunk}")
+            buffer.write("data: {}".format(chunk))
             buffer.write(Sse._DEFAULT_SEPARATOR)
 
         if retry is not None:
             if not isinstance(retry, int):
                 raise TypeError("retry argument must be int")
-            buffer.write(f"retry: {retry}")
+            buffer.write("retry: {}".format(retry))
             buffer.write(Sse._DEFAULT_SEPARATOR)
 
         buffer.write(Sse._DEFAULT_SEPARATOR)
@@ -144,11 +144,11 @@ class Sse:
         :param callable func: coroutine function with one parameter - request
         """
         if not callable(func):
-            raise TypeError(f"{func} should be callable")
+            raise TypeError("{} should be callable".format(func))
         if not inspect.iscoroutinefunction(func):
-            raise TypeError(f"{func} should be coroutine function")
-        if len(inspect.signature(func).parameters) != 1:
-            raise ValueError(f"{func} should get only one parameter - request")
+            raise TypeError("{} should be coroutine function".format(func))
+        if len(inspect.signature().parameters) != 1:
+            raise ValueError("{} should get only one parameter - request".format(func))
 
         self._before_request = func
 
