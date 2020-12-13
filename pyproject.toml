@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sanic_sse"
-version = "0.3.0"
+version = "0.3.1"
 description = "Sanic Server-Sent Events extension"
 authors = ["Innokenty Lebedev"]
 repository = "https://github.com/inn0kenty/sanic_sse"
