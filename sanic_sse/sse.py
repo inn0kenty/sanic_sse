@@ -8,6 +8,7 @@ import io
 import asyncio
 import contextlib
 import inspect
+import warnings
 from http import HTTPStatus
 from sanic import Sanic
 from sanic.response import stream
@@ -85,7 +86,7 @@ class Sse:
 
         return buffer.getvalue().encode("utf-8")
 
-    async def send(  # pylint: disable=too-many-arguments
+    def send(  # pylint: disable=too-many-arguments
         self,
         data: str,
         channel_id: str = None,
@@ -109,7 +110,7 @@ class Sse:
 
         data = self._prepare(data, event_id, event, retry)
 
-        await self._pubsub.publish(data, channel_id)
+        return self._pubsub.publish(data, channel_id)
 
     def send_nowait(  # pylint: disable=too-many-arguments
         self,
@@ -133,9 +134,9 @@ class Sse:
             value is specified, the field is ignored.
         """
 
-        data = self._prepare(data, event_id, event, retry)
+        warnings.warn("deprecated. use send", DeprecationWarning)
 
-        self._pubsub.publish_nowait(data, channel_id)
+        self.send(data, channel_id, event_id, event, retry)
 
     def set_before_request_callback(self, func):
         """
@@ -195,22 +196,19 @@ class Sse:
                 await self._before_request(request)
 
             channel_id = request.args.get("channel_id", None)
-            try:
-                channel_id = self._pubsub.register(channel_id=channel_id)
-            except ValueError as exc:
-                abort(HTTPStatus.BAD_REQUEST, str(exc))
+            client_id = self._pubsub.register(channel_id)
 
             async def streaming_fn(response):
                 try:
                     while True:
                         try:
-                            data = await self._pubsub.get(channel_id)
+                            data = await self._pubsub.get(client_id, channel_id)
                         except ValueError:
                             break
                         await response.write(data)
-                        self._pubsub.task_done(channel_id)
+                        self._pubsub.task_done(client_id, channel_id)
                 finally:
-                    self._pubsub.delete(channel_id)
+                    self._pubsub.delete(client_id, channel_id)
 
             return stream(
                 streaming_fn, headers=self._HEADERS, content_type="text/event-stream"
