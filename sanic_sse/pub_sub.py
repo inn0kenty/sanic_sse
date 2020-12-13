@@ -42,7 +42,7 @@ class PubSub:
         """
 
         client_id = str(uuid.uuid4())
-        q: asyncio.Queue = asyncio.Queue()
+        q = asyncio.Queue()
 
         self._channels[channel_id][client_id] = q
         if channel_id:
