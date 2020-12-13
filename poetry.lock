@@ -59,17 +59,6 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
-name = "bumpversion"
-version = "0.6.0"
-description = "Version-bump your software with a single command!"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-bump2version = "*"
-
-[[package]]
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
@@ -416,7 +405,7 @@ testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.5"
-content-hash = "efab354d5b51f0d5aa4418bcd717d36071ea8d71807aa84c2956a189658587ab"
+content-hash = "0c63c0a6b31a9c6b026ee48df828557684d1f9fe6b60d7d0dc4bffea4d733a73"
 
 [metadata.files]
 aiofiles = [
@@ -442,10 +431,6 @@ attrs = [
 bump2version = [
     {file = "bump2version-1.0.1-py2.py3-none-any.whl", hash = "sha256:37f927ea17cde7ae2d7baf832f8e80ce3777624554a653006c9144f8017fe410"},
     {file = "bump2version-1.0.1.tar.gz", hash = "sha256:762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6"},
-]
-bumpversion = [
-    {file = "bumpversion-0.6.0-py2.py3-none-any.whl", hash = "sha256:4eb3267a38194d09f048a2179980bb4803701969bff2c85fa8f6d1ce050be15e"},
-    {file = "bumpversion-0.6.0.tar.gz", hash = "sha256:4ba55e4080d373f80177b4dabef146c07ce73c7d1377aabf9d3c3ae1f94584a6"},
 ]
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
