@@ -45,7 +45,6 @@ async def send_event(request):
 
     # optional arguments: event_id - str, event - str, retry - int
     # data should always be str
-    # also you can use sse_send_nowait for send event without waiting
     try:
         await request.app.sse_send(json_dumps(request.json), channel_id=channel_id)
     except KeyError:
