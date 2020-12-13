@@ -43,7 +43,9 @@ def test_prepate():
 
     assert (
         result
-        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(event_id, event, data, retry).encode()
+        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(
+            event_id, event, data, retry
+        ).encode()
     )
 
     with pytest.raises(TypeError):
@@ -92,7 +94,9 @@ async def test_send():
 
     assert (
         result
-        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(event_id, event, data, retry).encode()
+        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(
+            event_id, event, data, retry
+        ).encode()
     )
 
 
@@ -108,7 +112,7 @@ async def test_send_nowait():
     event = "2"
     retry = 3
 
-    sanic_app.sse_send_nowait(  # pylint: disable=no-member
+    sanic_app.sse_send(  # pylint: disable=no-member
         data, event_id=event_id, event=event, retry=retry
     )
 
@@ -118,7 +122,9 @@ async def test_send_nowait():
 
     assert (
         result
-        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(event_id, event, data, retry).encode()
+        == "id: {}\r\nevent: {}\r\ndata: {}\r\nretry: {}\r\n\r\n".format(
+            event_id, event, data, retry
+        ).encode()
     )
 
 
@@ -191,21 +197,6 @@ async def test_streaming_fn():
 
 
 @pytest.mark.asyncio
-async def test_register_two_subscribers():
-    sanic_app = Sanic()
-
-    Sse(sanic_app)
-
-    class Request:  # pylint: disable=too-few-public-methods
-        args = {"channel_id": "1"}
-
-    await sanic_app.router.routes_all["/sse"].handler(Request())
-
-    with pytest.raises(InvalidUsage):
-        await sanic_app.router.routes_all["/sse"].handler(Request())
-
-
-@pytest.mark.asyncio
 async def test_transport_closed():
     sanic_app = Sanic()
 
@@ -229,4 +220,4 @@ async def test_transport_closed():
     with contextlib.suppress(Exception):
         await fut
 
-    assert sse._pubsub.size() == 0
+    assert len(sse._pubsub._channels[None]) == 0

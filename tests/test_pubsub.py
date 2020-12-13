@@ -5,33 +5,27 @@ import pytest
 from sanic_sse.pub_sub import PubSub
 
 
-def test_pubsub_create():
-    pubsub = PubSub()
-
-    assert pubsub.size() == 0
-
-
 def test_pubsub_register_and_unregister():
     pubsub = PubSub()
 
-    channel_id = pubsub.register()
+    client_id = pubsub.register()
 
-    assert pubsub.size() == 1
-    assert isinstance(channel_id, str)
+    assert len(pubsub._channels[None]) == 1
+    assert isinstance(client_id, str)
 
-    channel_id2 = pubsub.register()
+    client_id2 = pubsub.register()
 
-    assert pubsub.size() == 2
+    assert len(pubsub._channels[None]) == 2
 
-    assert channel_id != channel_id2
+    assert client_id != client_id2
 
-    pubsub.delete(channel_id)
-    assert channel_id not in pubsub._channels
-    assert pubsub.size() == 1
+    pubsub.delete(client_id)
+    assert client_id not in pubsub._channels[None]
+    assert len(pubsub._channels[None]) == 1
 
-    pubsub.delete(channel_id2)
+    pubsub.delete(client_id2)
 
-    assert channel_id2 not in pubsub._channels
+    assert client_id2 not in pubsub._channels[None]
 
 
 @pytest.mark.asyncio
@@ -60,7 +54,7 @@ async def test_publish_nowait():
     channel_id1 = pubsub.register()
     channel_id2 = pubsub.register()
 
-    pubsub.publish_nowait(data)
+    pubsub.publish(data)
 
     async def handel(channel_id):
         data1 = await pubsub.get(channel_id)
@@ -82,40 +76,30 @@ async def test_stop():
         await pubsub.get(channel_id)
 
 
-def test_already_reg():
-    pubsub = PubSub()
-
-    channel_id = pubsub.register("1")
-    assert channel_id == "1"
-
-    with pytest.raises(ValueError):
-        pubsub.register("1")
-
-
 @pytest.mark.asyncio
 async def test_publish_to_channel():
     pubsub = PubSub()
 
-    channel_id1 = pubsub.register("1")
-    channel_id2 = pubsub.register("2")
+    client_id1 = pubsub.register("1")
+    client_id2 = pubsub.register("2")
 
     data = "test data"
 
-    await pubsub.publish(data, channel_id=channel_id1)
+    await pubsub.publish(data, "1")
 
-    assert not pubsub._channels[channel_id1].empty()
-    assert pubsub._channels[channel_id2].empty()
+    assert not pubsub._channels["1"][client_id1].empty()
+    assert pubsub._channels["2"][client_id2].empty()
 
-    await pubsub.get(channel_id1)
+    await pubsub.get(client_id1)
 
-    await pubsub.publish(data, channel_id=channel_id2)
+    await pubsub.publish(data, "2")
 
-    assert pubsub._channels[channel_id1].empty()
-    assert not pubsub._channels[channel_id2].empty()
+    assert pubsub._channels["1"][client_id1].empty()
+    assert not pubsub._channels["2"][client_id2].empty()
 
-    await pubsub.get(channel_id2)
+    await pubsub.get(client_id2)
 
     await pubsub.publish(data)
 
-    assert not pubsub._channels[channel_id1].empty()
-    assert not pubsub._channels[channel_id2].empty()
+    assert not pubsub._channels["1"][client_id1].empty()
+    assert not pubsub._channels["2"][client_id2].empty()
