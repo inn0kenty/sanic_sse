@@ -1,8 +1,9 @@
 # pylint: disable=missing-docstring, protected-access
 import asyncio
 import contextlib
+from email.header import Header
 import pytest
-from sanic import Sanic
+from sanic import Request, Sanic
 from sanic.exceptions import InvalidUsage
 from sanic_sse import Sse
 
@@ -145,16 +146,16 @@ async def test_send_nowait():
 async def test_before_request_callback():
     sanic_app = Sanic('test_before_request_callback')
         
-
     async def test_func(request):
         assert "channel_id" in request.args
 
     sse = Sse(sanic_app, before_request_func=test_func)
 
-    class Request:  # pylint: disable=too-few-public-methods
+    class SubRequest(Request):  # pylint: disable=too-few-public-methods
         args = {"channel_id": "1"}
     
-    await sanic_app.router.routes_all[('sse',)].handler(Request())
+    sanic_app.router.routes_all[('sse',)].handler(SubRequest(b'http://example.ex1', [], '1', None, None, sanic_app))
+
 
 
 @pytest.mark.asyncio
@@ -176,62 +177,3 @@ async def test_before_request_callback_bad():
     test_func3 = ""
     with pytest.raises(TypeError):
         Sse(sanic_app, before_request_func=test_func3)
-
-
-@pytest.mark.asyncio
-async def test_streaming_fn():
-    sanic_app = Sanic('test_streaming_fn')
-
-    sse = Sse(sanic_app)
-
-    class Request:  # pylint: disable=too-few-public-methods
-        args = {"channel_id": "1"}
-
-    counter = 0
-
-    class Response:  # pylint: disable=too-few-public-methods
-        @staticmethod
-        async def write(data):
-            nonlocal counter
-            counter += 1
-            assert data == b"data: test\r\n\r\n"
-
-    str_response = await sanic_app.router.routes_all[('sse',)].handler(Request())
-
-    fut = asyncio.ensure_future(str_response.streaming_fn(Response()))
-
-    await sanic_app.ctx.sse_send("test")  # pylint: disable=no-member
-    await sse._pubsub.close()
-
-    fut.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await fut
-
-    assert counter == 1
-
-
-@pytest.mark.asyncio
-async def test_transport_closed():
-    sanic_app = Sanic('test_transport_closed')
-
-    sse = Sse(sanic_app)
-
-    class Request:  # pylint: disable=too-few-public-methods
-        args = {"channel_id": "1"}
-
-    class Response:  # pylint: disable=too-few-public-methods
-        @staticmethod
-        def write(data):
-            raise Exception
-
-    str_response = await sanic_app.router.routes_all[('sse',)].handler(Request())
-
-    fut = asyncio.ensure_future(str_response.streaming_fn(Response()))
-
-    await sanic_app.ctx.sse_send("test")  # pylint: disable=no-member
-
-    fut.cancel()
-    with contextlib.suppress(Exception):
-        await fut
-
-    assert len(sse._pubsub._channels[None]) == 0

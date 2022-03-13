@@ -9,8 +9,7 @@ import asyncio
 import contextlib
 import inspect
 import warnings
-from sanic import Sanic
-from sanic.response import stream
+from sanic import Request, Sanic
 from .pub_sub import PubSub
 
 # pylint: disable=bad-continuation
@@ -189,25 +188,20 @@ class Sse:
         app.ctx.sse_send_nowait = self.send_nowait
 
         @app.route(self._url, methods=["GET"])
-        async def _(request):
+        async def _(request: Request):
             if self._before_request is not None:
                 await self._before_request(request)
 
             channel_id = request.args.get("channel_id", None)
             client_id = self._pubsub.register(channel_id)
-
-            async def streaming_fn(response):
-                try:
-                    while True:
-                        try:
-                            data = await self._pubsub.get(client_id, channel_id)
-                        except ValueError:
-                            break
-                        await response.write(data)
-                        self._pubsub.task_done(client_id, channel_id)
-                finally:
-                    self._pubsub.delete(client_id, channel_id)
-
-            return stream(
-                streaming_fn, headers=self._HEADERS, content_type="text/event-stream"
-            )
+            response = await request.respond(headers=self._HEADERS, content_type="text/event-stream")
+            try:
+                while True:
+                    try:
+                        data = await self._pubsub.get(client_id, channel_id)
+                    except ValueError:
+                        break
+                    await response.send(data)
+                    self._pubsub.task_done(client_id, channel_id)
+            finally:
+                self._pubsub.delete(client_id, channel_id)
