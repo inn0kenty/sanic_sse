@@ -25,18 +25,17 @@ async def test_listeners():
     listeners = (
         route
         for route in sanic_app.signal_router.routes
-        if route.name.startswith("server.init")
-    )
-    before_server_start = next(listeners)
+        if route.name.startswith("server.")
+    )    
     after_server_start = next(listeners)
+    before_server_stop = next(listeners)
 
     await after_server_start.handler(sanic_app, asyncio.get_event_loop())
 
     assert sse._ping_task is not None
 
-    await before_server_start.handler(sanic_app, asyncio.get_event_loop())
+    await before_server_stop.handler(sanic_app, asyncio.get_event_loop())
     
-
     assert sse._ping_task.cancelled()
 
 def test_prepare():
@@ -68,10 +67,11 @@ async def test_ping():
     listeners = (
         route
         for route in sanic_app.signal_router.routes
-        if route.name.startswith("server.init")
+        if route.name.startswith("server.")
     )
-    before_server_start = next(listeners)
     after_server_start = next(listeners)
+    before_server_stop = next(listeners)
+
 
     await after_server_start.handler(sanic_app, asyncio.get_event_loop())
     await asyncio.sleep(1)
@@ -80,9 +80,9 @@ async def test_ping():
 
     assert data == b": ping\r\n\r\n"
 
-    #await before_server_stop.handler(
-    #    sanic_app, asyncio.get_event_loop()
-    #)
+    await before_server_stop.handler(
+        sanic_app, asyncio.get_event_loop()
+    )
 
 
 @pytest.mark.asyncio

@@ -177,7 +177,7 @@ class Sse:
         async def _on_start(_, loop):
             self._ping_task = loop.create_task(self._ping())
 
-        @app.before_server_start
+        @app.before_server_stop
         async def _on_stop(_, __):
             self._ping_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
