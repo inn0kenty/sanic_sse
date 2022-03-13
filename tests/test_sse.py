@@ -1,14 +1,15 @@
 # pylint: disable=missing-docstring, protected-access
 import asyncio
 import contextlib
+from email.header import Header
 import pytest
-from sanic import Sanic
+from sanic import Request, Sanic
 from sanic.exceptions import InvalidUsage
 from sanic_sse import Sse
 
 
 def test_create():
-    sanic_app = Sanic()
+    sanic_app = Sanic('test_create')
     sse = Sse(sanic_app)
 
     assert sse._url == Sse._DEFAULT_URL
@@ -16,24 +17,29 @@ def test_create():
     assert sse._ping_interval == Sse._DEFAULT_PING_INTERVAL
 
 
+
 @pytest.mark.asyncio
 async def test_listeners():
-    sanic_app = Sanic()
+    sanic_app = Sanic('test_listeners')
     sse = Sse()
     sse.init_app(sanic_app)
+    listeners = (
+        route
+        for route in sanic_app.signal_router.routes
+        if route.name.startswith("server.")
+    )    
+    after_server_start = next(listeners)
+    before_server_stop = next(listeners)
 
-    sanic_app.listeners["after_server_start"][0](sanic_app, asyncio.get_event_loop())
+    await after_server_start.handler(sanic_app, asyncio.get_event_loop())
 
     assert sse._ping_task is not None
 
-    await sanic_app.listeners["before_server_stop"][0](
-        sanic_app, asyncio.get_event_loop()
-    )
-
+    await before_server_stop.handler(sanic_app, asyncio.get_event_loop())
+    
     assert sse._ping_task.cancelled()
 
-
-def test_prepate():
+def test_prepare():
     data = "test data"
     event_id = "1"
     event = "2"
@@ -54,27 +60,35 @@ def test_prepate():
 
 @pytest.mark.asyncio
 async def test_ping():
-    sanic_app = Sanic()
+    sanic_app = Sanic('test_ping')
     sse = Sse(sanic_app, ping_interval=0.1)
 
     channel_id = sse._pubsub.register()
 
-    sanic_app.listeners["after_server_start"][0](sanic_app, asyncio.get_event_loop())
+    listeners = (
+        route
+        for route in sanic_app.signal_router.routes
+        if route.name.startswith("server.")
+    )
+    after_server_start = next(listeners)
+    before_server_stop = next(listeners)
 
-    await asyncio.sleep(0)
+
+    await after_server_start.handler(sanic_app, asyncio.get_event_loop())
+    await asyncio.sleep(1)
 
     data = await sse._pubsub.get(channel_id)
 
     assert data == b": ping\r\n\r\n"
 
-    await sanic_app.listeners["before_server_stop"][0](
+    await before_server_stop.handler(
         sanic_app, asyncio.get_event_loop()
     )
 
 
 @pytest.mark.asyncio
 async def test_send():
-    sanic_app = Sanic()
+    sanic_app = Sanic('test_send')
     sse = Sse(sanic_app)
 
     channel_id = sse._pubsub.register()
@@ -84,7 +98,7 @@ async def test_send():
     event = "2"
     retry = 3
 
-    await sanic_app.sse_send(  # pylint: disable=no-member
+    await sanic_app.ctx.sse_send(  # pylint: disable=no-member
         data, event_id=event_id, event=event, retry=retry
     )
 
@@ -102,7 +116,7 @@ async def test_send():
 
 @pytest.mark.asyncio
 async def test_send_nowait():
-    sanic_app = Sanic()
+    sanic_app = Sanic('test_send_nowait')
     sse = Sse(sanic_app)
 
     channel_id = sse._pubsub.register()
@@ -112,7 +126,7 @@ async def test_send_nowait():
     event = "2"
     retry = 3
 
-    sanic_app.sse_send(  # pylint: disable=no-member
+    sanic_app.ctx.sse_send(  # pylint: disable=no-member
         data, event_id=event_id, event=event, retry=retry
     )
 
@@ -130,22 +144,23 @@ async def test_send_nowait():
 
 @pytest.mark.asyncio
 async def test_before_request_callback():
-    sanic_app = Sanic()
-
+    sanic_app = Sanic('test_before_request_callback')
+        
     async def test_func(request):
         assert "channel_id" in request.args
 
-    Sse(sanic_app, before_request_func=test_func)
+    sse = Sse(sanic_app, before_request_func=test_func)
 
-    class Request:  # pylint: disable=too-few-public-methods
+    class SubRequest(Request):  # pylint: disable=too-few-public-methods
         args = {"channel_id": "1"}
+    
+    sanic_app.router.routes_all[('sse',)].handler(SubRequest(b'http://example.ex1', [], '1', None, None, sanic_app))
 
-    await sanic_app.router.routes_all["/sse"].handler(Request())
 
 
 @pytest.mark.asyncio
 async def test_before_request_callback_bad():
-    sanic_app = Sanic()
+    sanic_app = Sanic('test_before_request_callback_bad')
 
     def test_func1(_):
         assert True
@@ -162,62 +177,3 @@ async def test_before_request_callback_bad():
     test_func3 = ""
     with pytest.raises(TypeError):
         Sse(sanic_app, before_request_func=test_func3)
-
-
-@pytest.mark.asyncio
-async def test_streaming_fn():
-    sanic_app = Sanic()
-
-    sse = Sse(sanic_app)
-
-    class Request:  # pylint: disable=too-few-public-methods
-        args = {"channel_id": "1"}
-
-    counter = 0
-
-    class Response:  # pylint: disable=too-few-public-methods
-        @staticmethod
-        async def write(data):
-            nonlocal counter
-            counter += 1
-            assert data == b"data: test\r\n\r\n"
-
-    str_response = await sanic_app.router.routes_all["/sse"].handler(Request())
-
-    fut = asyncio.ensure_future(str_response.streaming_fn(Response()))
-
-    await sanic_app.sse_send("test")  # pylint: disable=no-member
-    await sse._pubsub.close()
-
-    fut.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await fut
-
-    assert counter == 1
-
-
-@pytest.mark.asyncio
-async def test_transport_closed():
-    sanic_app = Sanic()
-
-    sse = Sse(sanic_app)
-
-    class Request:  # pylint: disable=too-few-public-methods
-        args = {"channel_id": "1"}
-
-    class Response:  # pylint: disable=too-few-public-methods
-        @staticmethod
-        def write(data):
-            raise Exception
-
-    str_response = await sanic_app.router.routes_all["/sse"].handler(Request())
-
-    fut = asyncio.ensure_future(str_response.streaming_fn(Response()))
-
-    await sanic_app.sse_send("test")  # pylint: disable=no-member
-
-    fut.cancel()
-    with contextlib.suppress(Exception):
-        await fut
-
-    assert len(sse._pubsub._channels[None]) == 0
