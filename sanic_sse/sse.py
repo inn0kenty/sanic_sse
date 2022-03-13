@@ -9,10 +9,8 @@ import asyncio
 import contextlib
 import inspect
 import warnings
-from http import HTTPStatus
 from sanic import Sanic
 from sanic.response import stream
-from sanic.exceptions import abort
 from .pub_sub import PubSub
 
 # pylint: disable=bad-continuation
@@ -175,11 +173,11 @@ class Sse:
 
         self._pubsub = PubSub()
 
-        @app.listener("after_server_start")
-        def _on_start(_, loop):
+        @app.after_server_start
+        async def _on_start(_, loop):
             self._ping_task = loop.create_task(self._ping())
 
-        @app.listener("before_server_stop")
+        @app.before_server_start
         async def _on_stop(_, __):
             self._ping_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -187,8 +185,8 @@ class Sse:
 
             await self._pubsub.close()
 
-        app.sse_send = self.send
-        app.sse_send_nowait = self.send_nowait
+        app.ctx.sse_send = self.send
+        app.ctx.sse_send_nowait = self.send_nowait
 
         @app.route(self._url, methods=["GET"])
         async def _(request):

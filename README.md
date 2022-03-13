@@ -20,14 +20,14 @@ Server example:
 from http import HTTPStatus
 from sanic import Sanic
 from sanic.response import json, json_dumps
-from sanic.exceptions import abort
+from sanic.exceptions import Forbidden
 from sanic_sse import Sse
 
 # This function is optional callback before sse request
 # You can use it for authorization purpose or something else
 async def before_sse_request(request):
     if request.headers.get("Auth", "") != "some_token":
-        abort(HTTPStatus.UNAUTHORIZED, "Bad auth token")
+        Forbidden("Bad auth token", HTTPStatus.UNAUTHORIZED)
 
 
 sanic_app = Sanic()
@@ -46,9 +46,9 @@ async def send_event(request):
     # optional arguments: event_id - str, event - str, retry - int
     # data should always be str
     try:
-        await request.app.sse_send(json_dumps(request.json), channel_id=channel_id)
+        await request.app.ctx.sse_send(json_dumps(request.json), channel_id=channel_id)
     except KeyError:
-        abort(HTTPStatus.NOT_FOUND, "channel not found")
+        Forbidden("channel not found", HTTPStatus.NOT_FOUND)
 
     return json({"status": "ok"})
 
