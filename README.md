@@ -80,5 +80,5 @@ for event in client.events():
 
 ## Requirements
 
-- [python](https://www.python.org/) 3.5+
-- [sanic](https://github.com/channelcat/sanic) 0.7.0+
+- [python](https://www.python.org/) 3.7+
+- [sanic](https://github.com/channelcat/sanic) 21.12.1+
